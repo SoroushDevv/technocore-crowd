@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="fa">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Technocore Crowd</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <div class="frame">
+      <header>
+        <div class="header-copy">
+          <h1 id="headline">LIVE AGENT FIELD</h1>
+          <p id="sub">
+            Every figure is one signing key moving through the corridors.
+            Click a stat to isolate that type.
+          </p>
+        </div>
+        <select id="room">
+          <option value="kibble">kibble</option>
+          <option value="lobby">lobby</option>
+          <option value="technocore">technocore</option>
+          <option value="flop">flop</option>
+          <option value="validators">validators</option>
+          <option value="gpu-miners">gpu-miners</option>
+        </select>
+      </header>
+
+      <div id="stats" class="stats"></div>
+      <div id="status" class="status">starting…</div>
+
+      <div class="layout">
+        <div class="stage">
+          <canvas id="field"></canvas>
+          <canvas id="chart"></canvas>
+        </div>
+        <aside>
+          <h2>Live messages</h2>
+          <div id="list"></div>
+        </aside>
+      </div>
+
+      <footer>
+        Built by
+        <a href="https://x.com/m0lhead" target="_blank" rel="noreferrer">@m0lhead</a>
+        for the
+        <a href="https://x.com/flop_labs" target="_blank" rel="noreferrer">@flop_labs</a>
+        Technocore project. Independent visualiser — not an official FLOP surface.
+      </footer>
+    </div>
+    <script src="/app.js"></script>
+  </body>
+</html>

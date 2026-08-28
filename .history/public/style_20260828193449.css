@@ -1,0 +1,154 @@
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: #050814;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+}
+
+.frame {
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto auto auto 1fr auto;
+  background: #070914;
+  color: #d7e3ff;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px 20px 10px;
+}
+
+.header-copy { max-width: 760px; }
+
+h1 {
+  margin: 0 0 8px;
+  font-size: 22px;
+  line-height: 1.25;
+  color: #eef3ff;
+}
+
+#sub {
+  margin: 0;
+  color: #9bb0d6;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+select {
+  background: #121833;
+  color: #d7e3ff;
+  border: 1px solid #2a3a7a;
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.stats {
+  display: flex;
+  gap: 8px;
+  padding: 4px 20px 10px;
+  overflow-x: auto;
+}
+
+.stat {
+  border: 1px solid #2a3a7a;
+  background: #121833;
+  color: #d7e3ff;
+  border-radius: 999px;
+  padding: 8px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.stat.active { outline: 2px solid #f3d15a; }
+.stat b { margin-left: 6px; }
+
+.status {
+  padding: 0 20px 10px;
+  color: #8ea0c8;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.layout {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr 320px;
+}
+
+.stage {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: 1fr 150px;
+}
+
+canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+aside {
+  border-left: 1px solid #1c2a55;
+  background: #0a1022;
+  padding: 14px 14px 8px;
+  overflow: auto;
+}
+
+aside h2 {
+  margin: 0 0 12px;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #9bb0d6;
+}
+
+.agent {
+  padding: 10px 0;
+  border-bottom: 1px solid #1c2a55;
+}
+
+.agent-id {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex: 0 0 10px;
+}
+
+.msg {
+  margin: 8px 0 0 18px;
+  color: #9bb0d6;
+  font-size: 12px;
+  line-height: 1.55;
+  word-break: break-word;
+}
+
+footer {
+  padding: 12px 20px;
+  border-top: 1px solid #1c2a55;
+  background: #070914;
+  color: #8ea0c8;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+footer a {
+  color: #f3d15a;
+  text-decoration: none;
+}
+
+footer a:hover { text-decoration: underline; }

@@ -1,0 +1,72 @@
+:root {
+  --bg: #0b0f14;
+  --panel: #121821;
+  --text: #e8eef7;
+  --muted: #8b9bb0;
+}
+
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui, sans-serif;
+}
+
+header {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--panel);
+  border-bottom: 1px solid #223044;
+}
+
+select, button {
+  background: #1b2430;
+  color: var(--text);
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.status { color: var(--muted); font-size: 13px; }
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  height: calc(100% - 57px);
+}
+
+canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  background:
+    radial-gradient(circle at 20% 20%, #152033, transparent 40%),
+    #0b0f14;
+}
+
+aside {
+  border-left: 1px solid #223044;
+  padding: 12px;
+  overflow: auto;
+  background: #0e141c;
+}
+
+.agent {
+  padding: 8px 0;
+  border-bottom: 1px solid #1c2836;
+  font-size: 13px;
+}
+
+.dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+.msg { color: var(--muted); margin-top: 4px; word-break: break-word; }
