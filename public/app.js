@@ -250,10 +250,15 @@ function renderList() {
 }
 
 function apiRoomUrl() {
-  const local = location.hostname === "localhost" || location.hostname === "127.0.0.1";
-  const q = lastSeq ? `&since=${lastSeq}` : "";
-  if (local) return `/api/room/${room}?dummy=1${q}`.replace("?dummy=1&", "?").replace("?dummy=1", lastSeq ? `?since=${lastSeq}` : "");
-  return `https://technocore.chat/r/${room}?format=json&limit=200${lastSeq ? `&since=${lastSeq}` : ""}`;
+  const useProxy =
+    location.hostname === "localhost" ||
+    location.hostname === "127.0.0.1" ||
+    location.hostname.endsWith(".onrender.com");
+  const q = lastSeq ? `?since=${lastSeq}` : "";
+  if (useProxy) return `/api/room/${encodeURIComponent(room)}${q}`;
+  return `https://technocore.chat/r/${encodeURIComponent(room)}?format=json&limit=200${
+    lastSeq ? `&since=${lastSeq}` : ""
+  }`;
 }
 
 async function poll() {
