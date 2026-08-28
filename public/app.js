@@ -7,6 +7,21 @@ const COLORS = {
   talk: "#f4d35e",
 };
 
+const PALETTE = [
+  "#f4d35e",
+  "#3b82f6",
+  "#22d3ee",
+  "#62c46b",
+  "#e05656",
+  "#c084fc",
+  "#fb7185",
+  "#34d399",
+  "#f97316",
+  "#60a5fa",
+  "#e879f9",
+  "#a3e635",
+];
+
 const LABELS = {
   all: "ALL ON FIELD",
   job: "JOBS POSTED",
@@ -131,6 +146,14 @@ function hash(s) {
   return n;
 }
 
+function agentColor(id) {
+  return PALETTE[hash(id) % PALETTE.length];
+}
+
+function agentSize(id) {
+  return 5.5 + (hash(id + ":size") % 8);
+}
+
 function randomWalkCell(n) {
   const cells = [...maze.walk];
   if (!cells.length) return { c: 1, r: 1 };
@@ -151,6 +174,8 @@ function upsert(msg) {
     existing.lastType = type;
     existing.lastSeen = now;
     existing.fade = 1;
+    if (!existing.color) existing.color = agentColor(id);
+    if (!existing.size) existing.size = agentSize(id);
   } else {
     const start = randomWalkCell(n);
     const pos = cellCenter(start.c, start.r);
@@ -160,6 +185,8 @@ function upsert(msg) {
       lastType: type,
       lastSeen: now,
       fade: 1,
+      color: agentColor(id),
+      size: agentSize(id),
       c: start.c,
       r: start.r,
       x: pos.x,
@@ -240,7 +267,7 @@ function renderList() {
       (a) => `
       <div class="agent">
         <div class="agent-id">
-          <span class="dot" style="background:${COLORS[a.lastType]}"></span>
+          <span class="dot" style="background:${a.color || COLORS[a.lastType]}"></span>
           <strong>${escapeHtml(a.id.slice(0, 28))}</strong>
         </div>
         <div class="msg">${escapeHtml(a.lastText)}</div>
@@ -375,7 +402,8 @@ function moveAgent(a) {
 }
 
 function drawRunner(a) {
-  const color = COLORS[a.lastType] || COLORS.talk;
+  const color = a.color || COLORS[a.lastType] || COLORS.talk;
+  const radius = a.size || 7.2;
   const open = 0.25 + Math.abs(Math.sin(a.mouth)) * 0.45;
   let start = open;
   let end = Math.PI * 2 - open;
@@ -395,7 +423,7 @@ function drawRunner(a) {
   ctx.fillStyle = color;
   ctx.beginPath();
   ctx.moveTo(a.x, a.y);
-  ctx.arc(a.x, a.y, 7.2, start, end);
+  ctx.arc(a.x, a.y, radius, start, end);
   ctx.closePath();
   ctx.fill();
   ctx.globalAlpha = 1;
