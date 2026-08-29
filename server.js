@@ -1,9 +1,38 @@
+const fs = require("fs");
+const path = require("path");
 const express = require("express");
 const app = express();
 
 const UP = "https://technocore.chat";
 const cache = new Map();
 const PORT = Number(process.env.PORT) || 3000;
+const PUBLIC_DIR = path.join(__dirname, "public");
+const STATS_FILE = path.join(__dirname, "data", "views.json");
+const STATS_KEY = process.env.STATS_KEY || "crowd-secret";
+
+const stats = loadStats();
+
+function loadStats() {
+  try {
+    return JSON.parse(fs.readFileSync(STATS_FILE, "utf8"));
+  } catch {
+    return { views: 0, uniques: 0, seen: {}, last: null };
+  }
+}
+
+function saveStats() {
+  try {
+    fs.mkdirSync(path.dirname(STATS_FILE), { recursive: true });
+    const slimSeen = {};
+    const ids = Object.keys(stats.seen);
+    const keep = ids.slice(-5000);
+    for (const id of keep) slimSeen[id] = stats.seen[id];
+    stats.seen = slimSeen;
+    fs.writeFileSync(STATS_FILE, JSON.stringify(stats));
+  } catch (err) {
+    console.error("stats save failed", err.message);
+  }
+}
 
 function cleanRoom(name) {
   const n = String(name || "kibble").toLowerCase();
@@ -34,6 +63,29 @@ function normalizePayload(data) {
   return { raw: data, messages: [] };
 }
 
+app.get("/api/hit", (req, res) => {
+  const id = String(req.query.id || "").slice(0, 80);
+  stats.views += 1;
+  stats.last = new Date().toISOString();
+  if (id && !stats.seen[id]) {
+    stats.seen[id] = stats.last;
+    stats.uniques += 1;
+  }
+  saveStats();
+  res.json({ ok: true });
+});
+
+app.get("/api/stats", (req, res) => {
+  if (String(req.query.k || "") !== STATS_KEY) {
+    return res.status(404).json({ error: "not found" });
+  }
+  res.json({
+    views: stats.views,
+    uniques: stats.uniques,
+    last: stats.last,
+  });
+});
+
 app.get("/api/rooms", async (_req, res) => {
   try {
     const data = await cachedGet("rooms", `${UP}/rooms?format=json&limit=50`);
@@ -55,8 +107,8 @@ app.get("/api/room/:name", async (req, res) => {
   }
 });
 
-app.use(express.static("public"));
+app.use(express.static(PUBLIC_DIR));
 
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`Local: http://localhost:${PORT}`);
 });

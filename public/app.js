@@ -577,3 +577,15 @@ roomEl.addEventListener("change", () => {
 poll();
 setInterval(poll, 4000);
 tick();
+
+
+(function trackView() {
+  try {
+    let id = localStorage.getItem("crowd_vid");
+    if (!id) {
+      id = Math.random().toString(36).slice(2) + Date.now().toString(36);
+      localStorage.setItem("crowd_vid", id);
+    }
+    fetch("/api/hit?id=" + encodeURIComponent(id)).catch(() => {});
+  } catch (e) {}
+})();
