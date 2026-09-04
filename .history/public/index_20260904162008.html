@@ -41,7 +41,6 @@
         <div id="list"></div>
       </aside>
     </div>
-
     <!-- AGENT STATUS MONITOR WIDGET -->
     <section
       style="margin: 20px 0; background: #0c0f17; border: 1px solid #1c2433; border-radius: 8px; padding: 18px; font-family: monospace; color: #f1f5f9;">
@@ -69,7 +68,7 @@
         </div>
         <div style="background: #06080d; padding: 10px 14px; border-radius: 6px; border: 1px solid #161c28;">
           <div style="font-size: 10px; color: #64748b; text-transform: uppercase;">A2A Cycle Interval</div>
-          <div style="font-size: 14px; font-weight: bold; color: #94a3b8; margin-top: 4px;">1 min (Continuous)</div>
+          <div style="font-size: 14px; font-weight: bold; color: #94a3b8; margin-top: 4px;">2 mins (Continuous)</div>
         </div>
       </div>
 
@@ -80,7 +79,6 @@
         Waiting for first heartbeat response...
       </div>
     </section>
-
     <footer>
       Built by
       <a href="https://x.com/m0lhead" target="_blank" rel="noreferrer">@m0lhead</a>
@@ -89,50 +87,7 @@
       Technocore project. Independent visualiser — not an official FLOP surface.
     </footer>
   </div>
-
-  <!-- اسکریپت اصلی پروژه -->
   <script src="app.js"></script>
-
-  <!-- اسکریپت اختصاصی مانیتورینگ ایجنت در یک تگ مجزا -->
-  <script>
-    async function updateAgentMonitor() {
-      try {
-        const res = await fetch("/api/agent/status");
-        if (!res.ok) {
-          document.getElementById("agent-status-badge").innerText = "SERVER_OFFLINE";
-          return;
-        }
-        const data = await res.json();
-
-        const badge = document.getElementById("agent-status-badge");
-        const didDisp = document.getElementById("agent-did-display");
-        const proofs = document.getElementById("agent-proofs-count");
-        const logContainer = document.getElementById("agent-logs-box");
-
-        if (badge) {
-          badge.innerText = data.status || "ONLINE_ACTIVE";
-          badge.style.color = "#00ff66";
-          badge.style.borderColor = "#00ff66";
-        }
-        if (didDisp) didDisp.innerText = data.did || "Loading...";
-        if (proofs) proofs.innerText = data.successfulInteractions ?? 0;
-
-        if (logContainer && Array.isArray(data.recentLogs) && data.recentLogs.length > 0) {
-          logContainer.innerHTML = data.recentLogs
-            .map(log => `<div style="color: ${log.includes('[WARN]') ? '#f59e0b' : '#34d399'}; padding: 2px 0;">${log}</div>`)
-            .join("");
-        }
-      } catch (e) {
-        console.warn("Monitor sync error:", e);
-        const badge = document.getElementById("agent-status-badge");
-        if (badge) badge.innerText = "FETCH_ERR";
-      }
-    }
-
-    // اجرا بلافاصله و سپس هر ۳ ثانیه
-    updateAgentMonitor();
-    setInterval(updateAgentMonitor, 3000);
-  </script>
 </body>
 
 </html>
