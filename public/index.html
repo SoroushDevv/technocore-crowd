@@ -7,52 +7,67 @@
   <title>Technocore Crowd</title>
   <link rel="stylesheet" href="style.css" />
   <style>
-    /* استایل ویجت رشد نهال سایبری */
+    /* مخفی‌سازی نوار اسکرول پیام‌ها بدون دستکاری بقیه صفحه */
+    aside, #list {
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    aside::-webkit-scrollbar, #list::-webkit-scrollbar {
+      display: none;
+      width: 0;
+      height: 0;
+    }
+
+    /* برجسته‌سازی پیام‌های ایجنت خودتان */
+    .msg-mine {
+      border: 1px solid #00ff66 !important;
+      background: rgba(0, 255, 102, 0.08) !important;
+      box-shadow: 0 0 14px rgba(0, 255, 102, 0.25) !important;
+    }
+    .msg-mine-badge {
+      display: inline-block;
+      font-family: monospace;
+      font-size: 9px;
+      font-weight: 800;
+      background: #00ff66;
+      color: #000;
+      padding: 1px 5px;
+      border-radius: 3px;
+      margin-right: 6px;
+    }
+
+    /* ویجت رشد نهال */
     .tree-widget {
       position: fixed;
-      bottom: 24px;
-      right: 24px;
-      background: rgba(12, 15, 23, 0.94);
+      bottom: 20px;
+      right: 20px;
+      background: rgba(12, 15, 23, 0.95);
       border: 1px solid #1c2433;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
-      backdrop-filter: blur(10px);
-      border-radius: 12px;
-      padding: 16px;
-      width: 220px;
+      border-radius: 10px;
+      padding: 14px;
+      width: 200px;
       font-family: monospace;
       color: #f1f5f9;
       z-index: 9999;
-      transition: all 0.3s ease;
       text-align: center;
     }
-    .tree-widget:hover {
-      border-color: #00ff66;
-      transform: translateY(-4px);
+    .tree-icon {
+      font-size: 36px;
+      margin: 4px 0;
     }
-    .tree-stage-icon {
-      font-size: 42px;
-      line-height: 1.2;
-      margin: 6px 0;
-      filter: drop-shadow(0 0 12px rgba(0, 255, 102, 0.3));
-      animation: floatTree 3s infinite ease-in-out;
-    }
-    @keyframes floatTree {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-4px); }
-    }
-    .progress-bar-wrap {
+    .tree-bar-bg {
       background: #06080d;
       border: 1px solid #1c2433;
-      height: 7px;
-      border-radius: 4px;
+      height: 6px;
+      border-radius: 3px;
       overflow: hidden;
-      margin: 8px 0;
+      margin: 6px 0;
     }
-    .progress-bar-inner {
+    .tree-bar-fill {
       height: 100%;
-      background: linear-gradient(90deg, #00ff66, #00f0ff);
+      background: #00ff66;
       width: 5%;
-      transition: width 0.6s ease;
+      transition: width 0.4s ease;
     }
   </style>
 </head>
@@ -82,7 +97,7 @@
 
     <div class="layout">
       <div class="stage">
-        <!-- کانواس میدان ایجنت‌ها بدون گراف پس‌زمینه -->
+        <!-- فقط فیلد ایجنت‌ها نگه داشته شده و چارت حذف گردید -->
         <canvas id="field"></canvas>
       </div>
       <aside>
@@ -91,26 +106,20 @@
       </aside>
     </div>
 
-    <!-- پنل مانیتورینگ ایجنت اختصاصی -->
-    <section
-      style="margin: 20px 0; background: #0c0f17; border: 1px solid #1c2433; border-radius: 8px; padding: 18px; font-family: monospace; color: #f1f5f9;">
-      <div
-        style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1c2433; padding-bottom: 12px; margin-bottom: 14px;">
+    <!-- مانیتورینگ ایجنت -->
+    <section style="margin: 20px 0; background: #0c0f17; border: 1px solid #1c2433; border-radius: 8px; padding: 18px; font-family: monospace; color: #f1f5f9;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1c2433; padding-bottom: 12px; margin-bottom: 14px;">
         <div style="display: flex; align-items: center; gap: 8px;">
-          <span
-            style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #00ff66; box-shadow: 0 0 10px #00ff66;"></span>
+          <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #00ff66; box-shadow: 0 0 10px #00ff66;"></span>
           <strong style="font-size: 13px; letter-spacing: 0.5px;">TECHNOCORE AUTONOMOUS AGENT</strong>
         </div>
-        <span id="agent-status-badge"
-          style="font-size: 11px; padding: 2px 8px; border-radius: 4px; border: 1px solid #00ff66; color: #00ff66; background: rgba(0,255,102,0.05);">CONNECTING...</span>
+        <span id="agent-status-badge" style="font-size: 11px; padding: 2px 8px; border-radius: 4px; border: 1px solid #00ff66; color: #00ff66; background: rgba(0,255,102,0.05);">ONLINE</span>
       </div>
 
-      <div
-        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 14px;">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 14px;">
         <div style="background: #06080d; padding: 10px 14px; border-radius: 6px; border: 1px solid #161c28;">
           <div style="font-size: 10px; color: #64748b; text-transform: uppercase;">DID Identity</div>
-          <div id="agent-did-display" style="font-size: 11px; color: #38bdf8; word-break: break-all; margin-top: 4px;">
-            Loading...</div>
+          <div id="agent-did-display" style="font-size: 11px; color: #38bdf8; word-break: break-all; margin-top: 4px;">did:key:z6MkoZA46EWPJR6HSFD92hEfGVGpLCE9YJvC7cDviwrQ8crj</div>
         </div>
         <div style="background: #06080d; padding: 10px 14px; border-radius: 6px; border: 1px solid #161c28;">
           <div style="font-size: 10px; color: #64748b; text-transform: uppercase;">Total Network Proofs</div>
@@ -123,8 +132,7 @@
       </div>
 
       <div style="font-size: 11px; color: #64748b; margin-bottom: 6px; text-transform: uppercase;">Live Execution Logs:</div>
-      <div id="agent-logs-box"
-        style="background: #030406; border: 1px solid #161c28; border-radius: 4px; padding: 10px; height: 110px; overflow-y: auto; font-size: 11px; line-height: 1.6; color: #94a3b8;">
+      <div id="agent-logs-box" style="background: #030406; border: 1px solid #161c28; border-radius: 4px; padding: 10px; height: 110px; overflow-y: auto; font-size: 11px; line-height: 1.6; color: #94a3b8;">
         Waiting for first heartbeat response...
       </div>
     </section>
@@ -138,104 +146,69 @@
     </footer>
   </div>
 
-  <!-- ویجت شناور نهال رشد ایجنت -->
-  <div class="tree-widget" id="tree-container">
-    <div style="font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">
-      ⚡ AGENT TGE GROWTH
+  <!-- نهال رشد ایجنت -->
+  <div class="tree-widget">
+    <div style="font-size: 10px; color: #64748b; text-transform: uppercase;">⚡ TGE GROWTH</div>
+    <div class="tree-icon" id="tree-icon">🌱</div>
+    <div style="font-size: 11px; font-weight: bold; color: #00ff66;" id="tree-stage">Sprout Stage</div>
+    <div class="tree-bar-bg">
+      <div class="tree-bar-fill" id="tree-bar"></div>
     </div>
-    <div class="tree-stage-icon" id="tree-icon">🌱</div>
-    <div style="font-size: 12px; font-weight: bold; color: #00ff66;" id="tree-stage-name">Sprout Stage</div>
-    
-    <div class="progress-bar-wrap">
-      <div class="progress-bar-inner" id="tree-progress-bar"></div>
-    </div>
-    
     <div style="display: flex; justify-content: space-between; font-size: 10px; color: #94a3b8;">
-      <span id="tree-proofs-feed">0 Proofs</span>
-      <span id="tree-pct">0% to TGE</span>
+      <span id="tree-proofs">0 Proofs</span>
+      <span id="tree-pct">0%</span>
     </div>
   </div>
 
-  <!-- اسکریپت میدان ایجنت‌ها -->
   <script src="app.js"></script>
 
-  <!-- اسکریپت مانیتورینگ زنده ایجنت و نهال رشد -->
   <script>
-    const TGE_TARGET_PROOFS = 1000;
-
-    function renderTreeGrowth(proofsCount) {
-      const pct = Math.min(100, Math.round((proofsCount / TGE_TARGET_PROOFS) * 100));
-      const iconEl = document.getElementById("tree-icon");
-      const nameEl = document.getElementById("tree-stage-name");
-      const barEl = document.getElementById("tree-progress-bar");
-      const feedEl = document.getElementById("tree-proofs-feed");
+    function renderTree(proofs) {
+      const pct = Math.min(100, Math.round((proofs / 1000) * 100));
+      const icon = document.getElementById("tree-icon");
+      const stage = document.getElementById("tree-stage");
+      const bar = document.getElementById("tree-bar");
+      const count = document.getElementById("tree-proofs");
       const pctEl = document.getElementById("tree-pct");
 
-      if (barEl) barEl.style.width = Math.max(5, pct) + "%";
-      if (feedEl) feedEl.innerText = proofsCount + " Proofs";
+      if (bar) bar.style.width = Math.max(5, pct) + "%";
+      if (count) count.innerText = proofs + " Proofs";
       if (pctEl) pctEl.innerText = pct + "% to TGE";
 
-      if (iconEl && nameEl) {
-        if (pct < 15) {
-          iconEl.innerText = "🌱";
-          nameEl.innerText = "Sprout (Early Agent)";
-        } else if (pct < 40) {
-          iconEl.innerText = "🌿";
-          nameEl.innerText = "Seedling (Rooted)";
-        } else if (pct < 70) {
-          iconEl.innerText = "🪴";
-          nameEl.innerText = "Sapling (A2A Active)";
-        } else if (pct < 95) {
-          iconEl.innerText = "🌳";
-          nameEl.innerText = "Cyber Tree (Mature)";
-        } else {
-          iconEl.innerText = "🍎💎";
-          nameEl.innerText = "TGE Fruit Harvest!";
-          nameEl.style.color = "#00f0ff";
-        }
+      if (icon && stage) {
+        if (pct < 15) { icon.innerText = "🌱"; stage.innerText = "Sprout"; }
+        else if (pct < 45) { icon.innerText = "🌿"; stage.innerText = "Seedling"; }
+        else if (pct < 75) { icon.innerText = "🪴"; stage.innerText = "Sapling"; }
+        else if (pct < 98) { icon.innerText = "🌳"; stage.innerText = "Cyber Tree"; }
+        else { icon.innerText = "🍎💎"; stage.innerText = "Harvest!"; }
       }
     }
 
-    async function updateAgentMonitor() {
+    async function syncMonitor() {
       try {
         const res = await fetch("/api/agent/status");
-        if (!res.ok) {
-          document.getElementById("agent-status-badge").innerText = "SERVER_OFFLINE";
-          return;
-        }
+        if (!res.ok) return;
         const data = await res.json();
 
         const badge = document.getElementById("agent-status-badge");
-        const didDisp = document.getElementById("agent-did-display");
         const proofs = document.getElementById("agent-proofs-count");
-        const logContainer = document.getElementById("agent-logs-box");
+        const logsBox = document.getElementById("agent-logs-box");
 
-        const successfulProofs = data.successfulInteractions ?? 0;
+        if (badge) badge.innerText = data.status || "ONLINE";
+        if (proofs) proofs.innerText = data.successfulInteractions || 0;
 
-        if (badge) {
-          badge.innerText = data.status || "ONLINE_ACTIVE";
-          badge.style.color = "#00ff66";
-          badge.style.borderColor = "#00ff66";
-        }
-        if (didDisp) didDisp.innerText = data.did || "Loading...";
-        if (proofs) proofs.innerText = successfulProofs;
+        renderTree(data.successfulInteractions || 0);
 
-        renderTreeGrowth(successfulProofs);
-
-        if (logContainer && Array.isArray(data.recentLogs) && data.recentLogs.length > 0) {
-          logContainer.innerHTML = data.recentLogs
-            .map(log => `<div style="color: ${log.includes('[WARN]') ? '#f59e0b' : '#34d399'}; padding: 2px 0;">${log}</div>`)
+        if (logsBox && Array.isArray(data.recentLogs) && data.recentLogs.length > 0) {
+          logsBox.innerHTML = data.recentLogs
+            .map(l => `<div style="color: ${l.includes('[WARN]') ? '#f59e0b' : '#34d399'}">${l}</div>`)
             .join("");
         }
-      } catch (e) {
-        console.warn("Monitor sync error:", e);
-        const badge = document.getElementById("agent-status-badge");
-        if (badge) badge.innerText = "FETCH_ERR";
-      }
+      } catch (e) {}
     }
 
-    updateAgentMonitor();
-    setInterval(updateAgentMonitor, 3000);
+    syncMonitor();
+    setInterval(syncMonitor, 3000);
   </script>
 </body>
 

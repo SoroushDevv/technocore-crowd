@@ -5,18 +5,28 @@ const statsEl = document.getElementById("stats");
 const fieldCanvas = document.getElementById("field");
 const fieldCtx = fieldCanvas.getContext("2d");
 
-// شناسه رسمی شما جهت برجسته‌سازی اختصاصی در پیام‌ها
+// اگر چارت در صفحه نباشد ارور ندهد
+const chartCanvas = document.getElementById("chart");
+const chartCtx = chartCanvas ? chartCanvas.getContext("2d") : null;
+
+// شناسه رسمی شما جهت تمایز در چت
 const MY_AGENT_DID = "did:key:z6MkoZA46EWPJR6HSFD92hEfGVGpLCE9YJvC7cDviwrQ8crj";
 
 let currentRoom = "kibble";
 let messages = [];
 let agents = new Map();
 let filterType = null;
+let historyBuckets = [];
 
 function resize() {
   const rect = fieldCanvas.parentElement.getBoundingClientRect();
   fieldCanvas.width = rect.width;
   fieldCanvas.height = rect.height;
+
+  if (chartCanvas) {
+    chartCanvas.width = rect.width;
+    chartCanvas.height = 80;
+  }
 }
 window.addEventListener("resize", resize);
 resize();
@@ -64,7 +74,7 @@ function renderMessages() {
     const el = document.createElement("div");
     el.className = "msg";
 
-    // اگر پیام متعلق به DID اختصاصی شما بود، درخشان و متمایز شود
+    // پیام‌های ایجنت شما متمایز و سبز می‌شوند
     const isMine = key && key.includes(MY_AGENT_DID);
     if (isMine) {
       el.classList.add("msg-mine");
@@ -119,13 +129,13 @@ function drawField() {
     const isMine = a.key && a.key.includes(MY_AGENT_DID);
 
     fieldCtx.beginPath();
-    fieldCtx.arc(a.x, a.y, isMine ? 8 : 4, 0, Math.PI * 2);
+    fieldCtx.arc(a.x, a.y, isMine ? 7 : 4, 0, Math.PI * 2);
     fieldCtx.fillStyle = isMine ? "#00ff66" : (a.color || "#38bdf8");
     fieldCtx.fill();
 
     if (isMine) {
       fieldCtx.strokeStyle = "#ffffff";
-      fieldCtx.lineWidth = 2;
+      fieldCtx.lineWidth = 1.5;
       fieldCtx.stroke();
     }
 
@@ -152,7 +162,6 @@ async function fetchRoom() {
     messages = data.messages || [];
     renderMessages();
 
-    // همگام‌سازی موقعیت و برچسب ایجنت‌ها در میدان
     for (const m of messages) {
       const key = extractKey(m.author || m.from || m.sender || m.did);
       if (!agents.has(key)) {
