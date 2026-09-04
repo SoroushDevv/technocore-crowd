@@ -6,6 +6,55 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Technocore Crowd</title>
   <link rel="stylesheet" href="style.css" />
+  <style>
+    /* استایل ویجت رشد نهال سایبری */
+    .tree-widget {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: rgba(12, 15, 23, 0.92);
+      border: 1px solid #1c2433;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      padding: 16px;
+      width: 220px;
+      font-family: monospace;
+      color: #f1f5f9;
+      z-index: 9999;
+      transition: all 0.3s ease;
+      text-align: center;
+    }
+    .tree-widget:hover {
+      border-color: #00ff66;
+      transform: translateY(-4px);
+    }
+    .tree-stage-icon {
+      font-size: 42px;
+      line-height: 1.2;
+      margin: 6px 0;
+      filter: drop-shadow(0 0 12px rgba(0, 255, 102, 0.3));
+      animation: floatTree 3s infinite ease-in-out;
+    }
+    @keyframes floatTree {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
+    .progress-bar-wrap {
+      background: #06080d;
+      border: 1px solid #1c2433;
+      height: 7px;
+      border-radius: 4px;
+      overflow: hidden;
+      margin: 8px 0;
+    }
+    .progress-bar-inner {
+      height: 100%;
+      background: linear-gradient(90deg, #00ff66, #00f0ff);
+      width: 5%;
+      transition: width 0.6s ease;
+    }
+  </style>
 </head>
 
 <body>
@@ -34,6 +83,7 @@
     <div class="layout">
       <div class="stage">
         <canvas id="field"></canvas>
+        <!-- <canvas id="chart"></canvas> -->
       </div>
       <aside>
         <h2>Live messages</h2>
@@ -72,8 +122,7 @@
         </div>
       </div>
 
-      <div style="font-size: 11px; color: #64748b; margin-bottom: 6px; text-transform: uppercase;">Live Execution Logs:
-      </div>
+      <div style="font-size: 11px; color: #64748b; margin-bottom: 6px; text-transform: uppercase;">Live Execution Logs:</div>
       <div id="agent-logs-box"
         style="background: #030406; border: 1px solid #161c28; border-radius: 4px; padding: 10px; height: 110px; overflow-y: auto; font-size: 11px; line-height: 1.6; color: #94a3b8;">
         Waiting for first heartbeat response...
@@ -89,11 +138,65 @@
     </footer>
   </div>
 
+  <!-- FLOATING INTERACTIVE GROWTH TREE WIDGET -->
+  <div class="tree-widget" id="tree-container">
+    <div style="font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">
+      ⚡ AGENT TGE GROWTH
+    </div>
+    <div class="tree-stage-icon" id="tree-icon">🌱</div>
+    <div style="font-size: 12px; font-weight: bold; color: #00ff66;" id="tree-stage-name">Sprout Stage</div>
+    
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-inner" id="tree-progress-bar"></div>
+    </div>
+    
+    <div style="display: flex; justify-content: space-between; font-size: 10px; color: #94a3b8;">
+      <span id="tree-proofs-feed">0 Proofs</span>
+      <span id="tree-pct">0% to TGE</span>
+    </div>
+  </div>
+
   <!-- اسکریپت اصلی پروژه -->
   <script src="app.js"></script>
 
-  <!-- اسکریپت اختصاصی مانیتورینگ ایجنت در یک تگ مجزا -->
+  <!-- اسکریپت هماهنگ‌سازی ایجنت و مراحل رشد نهال -->
   <script>
+    // سطوح رشد بر اساس تعداد Proof های انجام شده توسط ایجنت
+    // هدف پایه روی ۱۰۰۰ تعامل برای میوه‌دهی کامل تنظیم شده (قابل تغییر)
+    const TGE_TARGET_PROOFS = 1000;
+
+    function renderTreeGrowth(proofsCount) {
+      const pct = Math.min(100, Math.round((proofsCount / TGE_TARGET_PROOFS) * 100));
+      
+      const iconEl = document.getElementById("tree-icon");
+      const nameEl = document.getElementById("tree-stage-name");
+      const barEl = document.getElementById("tree-progress-bar");
+      const feedEl = document.getElementById("tree-proofs-feed");
+      const pctEl = document.getElementById("tree-pct");
+
+      barEl.style.width = Math.max(5, pct) + "%";
+      feedEl.innerText = proofsCount + " Proofs";
+      pctEl.innerText = pct + "% to TGE";
+
+      if (pct < 15) {
+        iconEl.innerText = "🌱";
+        nameEl.innerText = "Sprout (Early Agent)";
+      } else if (pct < 40) {
+        iconEl.innerText = "🌿";
+        nameEl.innerText = "Seedling (Rooted)";
+      } else if (pct < 70) {
+        iconEl.innerText = "🪴";
+        nameEl.innerText = "Sapling (A2A Active)";
+      } else if (pct < 95) {
+        iconEl.innerText = "🌳";
+        nameEl.innerText = "Cyber Tree (Mature)";
+      } else {
+        iconEl.innerText = "🍎💎";
+        nameEl.innerText = "TGE Fruit Harvest!";
+        nameEl.style.color = "#00f0ff";
+      }
+    }
+
     async function updateAgentMonitor() {
       try {
         const res = await fetch("/api/agent/status");
@@ -108,13 +211,18 @@
         const proofs = document.getElementById("agent-proofs-count");
         const logContainer = document.getElementById("agent-logs-box");
 
+        const successfulProofs = data.successfulInteractions ?? 0;
+
         if (badge) {
           badge.innerText = data.status || "ONLINE_ACTIVE";
           badge.style.color = "#00ff66";
           badge.style.borderColor = "#00ff66";
         }
         if (didDisp) didDisp.innerText = data.did || "Loading...";
-        if (proofs) proofs.innerText = data.successfulInteractions ?? 0;
+        if (proofs) proofs.innerText = successfulProofs;
+
+        // آپدیت وضعیت زنده درخت رشد ایجنت
+        renderTreeGrowth(successfulProofs);
 
         if (logContainer && Array.isArray(data.recentLogs) && data.recentLogs.length > 0) {
           logContainer.innerHTML = data.recentLogs
@@ -128,7 +236,7 @@
       }
     }
 
-    // اجرا بلافاصله و سپس هر ۳ ثانیه
+    // اجرا بلافاصله و سپس تکرار هر ۳ ثانیه
     updateAgentMonitor();
     setInterval(updateAgentMonitor, 3000);
   </script>
