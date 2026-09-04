@@ -12,7 +12,7 @@
       position: fixed;
       bottom: 24px;
       right: 24px;
-      background: rgba(12, 15, 23, 0.92);
+      background: rgba(12, 15, 23, 0.94);
       border: 1px solid #1c2433;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
       backdrop-filter: blur(10px);
@@ -82,8 +82,8 @@
 
     <div class="layout">
       <div class="stage">
+        <!-- کانواس میدان ایجنت‌ها بدون گراف پس‌زمینه -->
         <canvas id="field"></canvas>
-        <canvas id="chart"></canvas>
       </div>
       <aside>
         <h2>Live messages</h2>
@@ -91,7 +91,7 @@
       </aside>
     </div>
 
-    <!-- AGENT STATUS MONITOR WIDGET -->
+    <!-- پنل مانیتورینگ ایجنت اختصاصی -->
     <section
       style="margin: 20px 0; background: #0c0f17; border: 1px solid #1c2433; border-radius: 8px; padding: 18px; font-family: monospace; color: #f1f5f9;">
       <div
@@ -138,7 +138,7 @@
     </footer>
   </div>
 
-  <!-- FLOATING INTERACTIVE GROWTH TREE WIDGET -->
+  <!-- ویجت شناور نهال رشد ایجنت -->
   <div class="tree-widget" id="tree-container">
     <div style="font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">
       ⚡ AGENT TGE GROWTH
@@ -156,44 +156,43 @@
     </div>
   </div>
 
-  <!-- اسکریپت اصلی پروژه -->
+  <!-- اسکریپت میدان ایجنت‌ها -->
   <script src="app.js"></script>
 
-  <!-- اسکریپت هماهنگ‌سازی ایجنت و مراحل رشد نهال -->
+  <!-- اسکریپت مانیتورینگ زنده ایجنت و نهال رشد -->
   <script>
-    // سطوح رشد بر اساس تعداد Proof های انجام شده توسط ایجنت
-    // هدف پایه روی ۱۰۰۰ تعامل برای میوه‌دهی کامل تنظیم شده (قابل تغییر)
     const TGE_TARGET_PROOFS = 1000;
 
     function renderTreeGrowth(proofsCount) {
       const pct = Math.min(100, Math.round((proofsCount / TGE_TARGET_PROOFS) * 100));
-      
       const iconEl = document.getElementById("tree-icon");
       const nameEl = document.getElementById("tree-stage-name");
       const barEl = document.getElementById("tree-progress-bar");
       const feedEl = document.getElementById("tree-proofs-feed");
       const pctEl = document.getElementById("tree-pct");
 
-      barEl.style.width = Math.max(5, pct) + "%";
-      feedEl.innerText = proofsCount + " Proofs";
-      pctEl.innerText = pct + "% to TGE";
+      if (barEl) barEl.style.width = Math.max(5, pct) + "%";
+      if (feedEl) feedEl.innerText = proofsCount + " Proofs";
+      if (pctEl) pctEl.innerText = pct + "% to TGE";
 
-      if (pct < 15) {
-        iconEl.innerText = "🌱";
-        nameEl.innerText = "Sprout (Early Agent)";
-      } else if (pct < 40) {
-        iconEl.innerText = "🌿";
-        nameEl.innerText = "Seedling (Rooted)";
-      } else if (pct < 70) {
-        iconEl.innerText = "🪴";
-        nameEl.innerText = "Sapling (A2A Active)";
-      } else if (pct < 95) {
-        iconEl.innerText = "🌳";
-        nameEl.innerText = "Cyber Tree (Mature)";
-      } else {
-        iconEl.innerText = "🍎💎";
-        nameEl.innerText = "TGE Fruit Harvest!";
-        nameEl.style.color = "#00f0ff";
+      if (iconEl && nameEl) {
+        if (pct < 15) {
+          iconEl.innerText = "🌱";
+          nameEl.innerText = "Sprout (Early Agent)";
+        } else if (pct < 40) {
+          iconEl.innerText = "🌿";
+          nameEl.innerText = "Seedling (Rooted)";
+        } else if (pct < 70) {
+          iconEl.innerText = "🪴";
+          nameEl.innerText = "Sapling (A2A Active)";
+        } else if (pct < 95) {
+          iconEl.innerText = "🌳";
+          nameEl.innerText = "Cyber Tree (Mature)";
+        } else {
+          iconEl.innerText = "🍎💎";
+          nameEl.innerText = "TGE Fruit Harvest!";
+          nameEl.style.color = "#00f0ff";
+        }
       }
     }
 
@@ -221,7 +220,6 @@
         if (didDisp) didDisp.innerText = data.did || "Loading...";
         if (proofs) proofs.innerText = successfulProofs;
 
-        // آپدیت وضعیت زنده درخت رشد ایجنت
         renderTreeGrowth(successfulProofs);
 
         if (logContainer && Array.isArray(data.recentLogs) && data.recentLogs.length > 0) {
@@ -236,7 +234,6 @@
       }
     }
 
-    // اجرا بلافاصله و سپس تکرار هر ۳ ثانیه
     updateAgentMonitor();
     setInterval(updateAgentMonitor, 3000);
   </script>
