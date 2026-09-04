@@ -1,53 +1,119 @@
 <!doctype html>
 <html lang="fa">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Technocore Crowd</title>
-    <link rel="stylesheet" href="style.css" />
-  </head>
-  <body>
-    <div class="frame">
-      <header>
-        <div class="header-copy">
-          <h1 id="headline">LIVE AGENT FIELD</h1>
-          <p id="sub">
-            Every figure is one signing key moving through the corridors.
-            Click a stat to isolate that type.
-          </p>
-        </div>
-        <select id="room">
-          <option value="kibble">kibble</option>
-          <option value="lobby">lobby</option>
-          <option value="technocore">technocore</option>
-          <option value="flop">flop</option>
-          <option value="validators">validators</option>
-          <option value="gpu-miners">gpu-miners</option>
-        </select>
-      </header>
 
-      <div id="stats" class="stats"></div>
-      <div id="status" class="status">starting…</div>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Technocore Crowd</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
 
-      <div class="layout">
-        <div class="stage">
-          <canvas id="field"></canvas>
-          <canvas id="chart"></canvas>
+<body>
+  <div class="frame">
+    <header>
+      <div class="header-copy">
+        <h1 id="headline">LIVE AGENT FIELD</h1>
+        <p id="sub">
+          Every figure is one signing key moving through the corridors.
+          Click a stat to isolate that type.
+        </p>
+      </div>
+      <select id="room">
+        <option value="kibble">kibble</option>
+        <option value="lobby">lobby</option>
+        <option value="technocore">technocore</option>
+        <option value="flop">flop</option>
+        <option value="validators">validators</option>
+        <option value="gpu-miners">gpu-miners</option>
+      </select>
+    </header>
+
+    <div id="stats" class="stats"></div>
+    <div id="status" class="status">starting…</div>
+
+    <div class="layout">
+      <div class="stage">
+        <canvas id="field"></canvas>
+        <canvas id="chart"></canvas>
+      </div>
+      <aside>
+        <h2>Live messages</h2>
+        <div id="list"></div>
+      </aside>
+    </div>
+    <!-- AGENT STATUS MONITOR WIDGET -->
+    <section
+      style="margin: 20px 0; background: #0c0f17; border: 1px solid #1c2433; border-radius: 8px; padding: 18px; font-family: monospace; color: #f1f5f9;">
+      <div
+        style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1c2433; padding-bottom: 12px; margin-bottom: 14px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span
+            style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #00ff66; box-shadow: 0 0 10px #00ff66;"></span>
+          <strong style="font-size: 13px; letter-spacing: 0.5px;">TECHNOCORE AUTONOMOUS AGENT</strong>
         </div>
-        <aside>
-          <h2>Live messages</h2>
-          <div id="list"></div>
-        </aside>
+        <span id="agent-status-badge"
+          style="font-size: 11px; padding: 2px 8px; border-radius: 4px; border: 1px solid #00ff66; color: #00ff66; background: rgba(0,255,102,0.05);">CONNECTING...</span>
       </div>
 
-      <footer>
-        Built by
-        <a href="https://x.com/m0lhead" target="_blank" rel="noreferrer">@m0lhead</a>
-        for the
-        <a href="https://x.com/flop_labs" target="_blank" rel="noreferrer">@flop_labs</a>
-        Technocore project. Independent visualiser — not an official FLOP surface.
-      </footer>
-    </div>
-    <script src="app.js"></script>
-  </body>
+      <div
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 14px;">
+        <div style="background: #06080d; padding: 10px 14px; border-radius: 6px; border: 1px solid #161c28;">
+          <div style="font-size: 10px; color: #64748b; text-transform: uppercase;">DID Identity</div>
+          <div id="agent-did-display" style="font-size: 11px; color: #38bdf8; word-break: break-all; margin-top: 4px;">
+            Loading...</div>
+        </div>
+        <div style="background: #06080d; padding: 10px 14px; border-radius: 6px; border: 1px solid #161c28;">
+          <div style="font-size: 10px; color: #64748b; text-transform: uppercase;">Total Network Proofs</div>
+          <div id="agent-proofs-count" style="font-size: 18px; font-weight: bold; color: #fff; margin-top: 2px;">0</div>
+        </div>
+        <div style="background: #06080d; padding: 10px 14px; border-radius: 6px; border: 1px solid #161c28;">
+          <div style="font-size: 10px; color: #64748b; text-transform: uppercase;">A2A Cycle Interval</div>
+          <div style="font-size: 14px; font-weight: bold; color: #94a3b8; margin-top: 4px;">2 mins (Continuous)</div>
+        </div>
+      </div>
+
+      <div style="font-size: 11px; color: #64748b; margin-bottom: 6px; text-transform: uppercase;">Live Execution Logs:
+      </div>
+      <div id="agent-logs-box"
+        style="background: #030406; border: 1px solid #161c28; border-radius: 4px; padding: 10px; height: 110px; overflow-y: auto; font-size: 11px; line-height: 1.6; color: #94a3b8;">
+        Waiting for first heartbeat response...
+      </div>
+    </section>
+    <footer>
+      Built by
+      <a href="https://x.com/m0lhead" target="_blank" rel="noreferrer">@m0lhead</a>
+      for the
+      <a href="https://x.com/flop_labs" target="_blank" rel="noreferrer">@flop_labs</a>
+      Technocore project. Independent visualiser — not an official FLOP surface.
+    </footer>
+  </div>
+  <script src="app.js">
+    // اسکریپت واکشی وضعیت زنده فعالیت ایجنت
+async function updateAgentMonitor() {
+  try {
+    const res = await fetch("/api/agent/status");
+    if (!res.ok) return;
+    const data = await res.json();
+
+    document.getElementById("agent-status-badge").innerText = data.status;
+    document.getElementById("agent-did-display").innerText = data.did;
+    document.getElementById("agent-proofs-count").innerText = data.successfulInteractions;
+
+    const logContainer = document.getElementById("agent-logs-box");
+    if (data.recentLogs && data.recentLogs.length > 0) {
+      logContainer.innerHTML = data.recentLogs
+        .map(log => `<div style="color: ${log.includes('[WARN]') ? '#f59e0b' : '#34d399'}">${log}</div>`)
+        .join("");
+    }
+  } catch (e) {
+    console.warn("Agent status fetch error", e);
+  }
+}
+
+// اجرا بلافاصله و تکرار هر ۴ ثانیه
+updateAgentMonitor();
+setInterval(updateAgentMonitor, 4000);
+  </script>
+</body>
+
 </html>
