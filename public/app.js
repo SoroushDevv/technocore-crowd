@@ -5,18 +5,16 @@ const statsEl = document.getElementById("stats");
 const fieldCanvas = document.getElementById("field");
 const fieldCtx = fieldCanvas.getContext("2d");
 
-// اگر چارت در صفحه نباشد ارور ندهد
 const chartCanvas = document.getElementById("chart");
 const chartCtx = chartCanvas ? chartCanvas.getContext("2d") : null;
 
-// شناسه رسمی شما جهت تمایز در چت
+// شناسه رسمی شما
 const MY_AGENT_DID = "did:key:z6MkoZA46EWPJR6HSFD92hEfGVGpLCE9YJvC7cDviwrQ8crj";
 
 let currentRoom = "kibble";
 let messages = [];
 let agents = new Map();
 let filterType = null;
-let historyBuckets = [];
 
 function resize() {
   const rect = fieldCanvas.parentElement.getBoundingClientRect();
@@ -64,18 +62,20 @@ function updateStats() {
 
 function renderMessages() {
   listEl.innerHTML = "";
-  const recent = messages.slice(-40).reverse();
+  const recent = messages.slice(-50).reverse();
 
   for (const m of recent) {
-    const key = extractKey(m.author || m.from || m.sender || m.did);
+    const rawAuthor = m.author || m.from || m.sender || m.did || "";
+    const key = extractKey(rawAuthor);
     const body = m.content || m.text || m.body || (typeof m === "string" ? m : JSON.stringify(m));
     const time = m.created_at || m.timestamp || m.ts || "";
 
     const el = document.createElement("div");
     el.className = "msg";
 
-    // پیام‌های ایجنت شما متمایز و سبز می‌شوند
-    const isMine = key && key.includes(MY_AGENT_DID);
+    // بررسی اینکه آیا پیام متعلق به ایجنت شما است یا نه
+    const isMine = String(key).includes("z6MkoZA46EWPJR6") || String(rawAuthor).includes("z6MkoZA46EWPJR6") || String(rawAuthor).includes(MY_AGENT_DID);
+
     if (isMine) {
       el.classList.add("msg-mine");
     }
@@ -85,7 +85,7 @@ function renderMessages() {
 
     const senderSpan = document.createElement("span");
     if (isMine) {
-      senderSpan.innerHTML = `<span class="msg-mine-badge">YOUR AGENT</span><strong style="color:#00ff66;">${shortKey(key)}</strong>`;
+      senderSpan.innerHTML = `<span class="msg-mine-badge">⚡ YOUR AGENT</span><strong style="color:#00ff66;">${shortKey(key)}</strong>`;
     } else {
       senderSpan.innerText = shortKey(key);
     }
@@ -126,16 +126,16 @@ function drawField() {
   for (const a of agents.values()) {
     if (filterType && a.type !== filterType) continue;
 
-    const isMine = a.key && a.key.includes(MY_AGENT_DID);
+    const isMine = a.key && (a.key.includes("z6MkoZA46EWPJR6") || a.key.includes(MY_AGENT_DID));
 
     fieldCtx.beginPath();
-    fieldCtx.arc(a.x, a.y, isMine ? 7 : 4, 0, Math.PI * 2);
+    fieldCtx.arc(a.x, a.y, isMine ? 8 : 4, 0, Math.PI * 2);
     fieldCtx.fillStyle = isMine ? "#00ff66" : (a.color || "#38bdf8");
     fieldCtx.fill();
 
     if (isMine) {
       fieldCtx.strokeStyle = "#ffffff";
-      fieldCtx.lineWidth = 1.5;
+      fieldCtx.lineWidth = 2;
       fieldCtx.stroke();
     }
 
@@ -165,7 +165,7 @@ async function fetchRoom() {
     for (const m of messages) {
       const key = extractKey(m.author || m.from || m.sender || m.did);
       if (!agents.has(key)) {
-        const isMine = key.includes(MY_AGENT_DID);
+        const isMine = key.includes("z6MkoZA46EWPJR6") || key.includes(MY_AGENT_DID);
         agents.set(key, {
           key,
           x: Math.random() * (fieldCanvas.width - 40) + 20,
