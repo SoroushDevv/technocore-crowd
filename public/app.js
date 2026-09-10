@@ -73,7 +73,6 @@ function renderMessages() {
     const el = document.createElement("div");
     el.className = "msg";
 
-    // بررسی اینکه آیا پیام متعلق به ایجنت شما است یا نه
     const isMine = String(key).includes("z6MkoZA46EWPJR6") || String(rawAuthor).includes("z6MkoZA46EWPJR6") || String(rawAuthor).includes(MY_AGENT_DID);
 
     if (isMine) {
@@ -85,7 +84,7 @@ function renderMessages() {
 
     const senderSpan = document.createElement("span");
     if (isMine) {
-      senderSpan.innerHTML = `<span class="msg-mine-badge">⚡ YOUR AGENT</span><strong style="color:#00ff66;">${shortKey(key)}</strong>`;
+      senderSpan.innerHTML = `<span class="msg-mine-badge">⚡ YOUR AGENT</span><strong style="color:#ff8800;">${shortKey(key)}</strong>`;
     } else {
       senderSpan.innerText = shortKey(key);
     }
@@ -129,19 +128,21 @@ function drawField() {
     const isMine = a.key && (a.key.includes("z6MkoZA46EWPJR6") || a.key.includes(MY_AGENT_DID));
 
     fieldCtx.beginPath();
-    fieldCtx.arc(a.x, a.y, isMine ? 8 : 4, 0, Math.PI * 2);
-    fieldCtx.fillStyle = isMine ? "#00ff66" : (a.color || "#38bdf8");
+    // نقطه نارنجی برای ایجنت شما با اندازه بزرگ‌تر (۹ پیکسل)
+    fieldCtx.arc(a.x, a.y, isMine ? 9 : 4, 0, Math.PI * 2);
+    fieldCtx.fillStyle = isMine ? "#ff8800" : (a.color || "#38bdf8");
     fieldCtx.fill();
 
+    // حلقه نورانی سفید-طلایی دور نقطه نارنجی
     if (isMine) {
-      fieldCtx.strokeStyle = "#ffffff";
-      fieldCtx.lineWidth = 2;
+      fieldCtx.strokeStyle = "#fff7ed";
+      fieldCtx.lineWidth = 2.5;
       fieldCtx.stroke();
     }
 
-    fieldCtx.fillStyle = isMine ? "#00ff66" : "#64748b";
+    fieldCtx.fillStyle = isMine ? "#ff8800" : "#64748b";
     fieldCtx.font = isMine ? "bold 11px monospace" : "10px monospace";
-    fieldCtx.fillText(isMine ? "★ YOUR AGENT" : shortKey(a.key), a.x + 10, a.y + 3);
+    fieldCtx.fillText(isMine ? "★ YOUR AGENT" : shortKey(a.key), a.x + 12, a.y + 4);
   }
 }
 
@@ -173,7 +174,7 @@ async function fetchRoom() {
           vx: (Math.random() - 0.5) * 1.2,
           vy: (Math.random() - 0.5) * 1.2,
           type: isMine ? "OWNER_AGENT" : (key.startsWith("did:key") ? "ED25519" : "HUMAN"),
-          color: isMine ? "#00ff66" : "#38bdf8"
+          color: isMine ? "#ff8800" : "#38bdf8"
         });
       }
     }
