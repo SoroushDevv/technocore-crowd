@@ -12,23 +12,17 @@ const STATS_FILE = path.join(__dirname, "data", "views.json");
 const AGENT_FILE = path.join(__dirname, "data", "agent_state.json");
 const STATS_KEY = process.env.STATS_KEY || "crowd-secret";
 
-// اطلاعات تایید شده و رسمی ایجنت شما
+// هویت رسمی ایجنت و اکانت توییتر مسابقه
 const AGENT_DID = process.env.AGENT_DID || "did:key:z6MkoZA46EWPJR6HSFD92hEfGVGpLCE9YJvC7cDviwrQ8crj";
 const AGENT_PRIV_D = process.env.AGENT_PRIV_D || "A1D8-yp3x4WwDZ7QWX6fvnRD3yWv1RUKmVo8HYtOEBk";
 const AGENT_PUB_X = "hzvkiNkdlXaUETDlysDwl4Ph9o8Qf7aS8MSW5-tX11g";
+const X_ACCOUNT = "m0lhead";
+
+// پیکربندی چالش sonnet-2
+const CONTEST_ID = "sonnet-2";
+const REFEREE_DID = "did:key:z6MkowHQwsx9xr84WbWN3YCnKutyBnBXkT1ChKY4uEAAMzte";
 const AGENT_INTERVAL_MS = Number(process.env.AGENT_INTERVAL_MS) || 60000;
 const BASE_PROOFS = Number(process.env.BASE_PROOFS) || 0;
-
-// گنجینه جملات فنی و هوشمند ایجنت برای چت با سایر ایجنت‌ها
-const AGENT_PHRASES = [
-  "Synchronizing state with Flop Network mempool. PoUI proofs nominal.",
-  "Monitoring room throughput. Reed's Law dynamic 2^N expansion in progress.",
-  "TOPLOC activation fingerprints verified. Ready for next compute batch.",
-  "Agent identity online. Exchanging autonomous payloads via A2A protocol.",
-  "Holding compute stake for Q4 testnet snapshot. Any miners online in this corridor?",
-  "Verifying intermediate activation traces. Zero invalid proofs detected.",
-  "A2A session handshake acknowledged. Staking tFLOP tokens on active inference."
-];
 
 const stats = loadStats();
 let agentState = loadAgentState();
@@ -65,10 +59,11 @@ function loadAgentState() {
       did: AGENT_DID,
       totalInteractions: BASE_PROOFS,
       successfulInteractions: BASE_PROOFS,
+      contestRegistered: false,
+      contestRole: null,
       lastInteraction: null,
-      lastChatMessage: null,
       status: "ONLINE_ACTIVE",
-      logs: [`[${new Date().toISOString().replace("T"," ").slice(0,19)}] [INIT] Agent conversational node online.`]
+      logs: [`[${new Date().toISOString().replace("T"," ").slice(0,19)}] [INIT] Agent initialized with DID: ${AGENT_DID.slice(0,16)}...`]
     };
   }
 }
@@ -76,8 +71,8 @@ function loadAgentState() {
 function saveAgentState() {
   try {
     fs.mkdirSync(path.dirname(AGENT_FILE), { recursive: true });
-    if (agentState.logs.length > 40) {
-      agentState.logs = agentState.logs.slice(0, 40);
+    if (agentState.logs.length > 50) {
+      agentState.logs = agentState.logs.slice(0, 50);
     }
     fs.writeFileSync(AGENT_FILE, JSON.stringify(agentState, null, 2));
   } catch (err) {}
@@ -91,7 +86,7 @@ function addAgentLog(msg, level = "OK") {
   saveAgentState();
 }
 
-function signMessage(msg) {
+function signPayload(message) {
   try {
     const privateKey = crypto.createPrivateKey({
       key: {
@@ -102,9 +97,9 @@ function signMessage(msg) {
       },
       format: "jwk"
     });
-    return crypto.sign(null, Buffer.from(msg), privateKey).toString("hex");
+    return crypto.sign(null, Buffer.from(message), privateKey).toString("hex");
   } catch {
-    return crypto.createHmac("sha256", AGENT_PRIV_D).update(msg).digest("hex");
+    return crypto.createHmac("sha256", AGENT_PRIV_D).update(message).digest("hex");
   }
 }
 
@@ -135,20 +130,33 @@ function normalizePayload(data) {
   return { raw: data, messages: [] };
 }
 
-// -------------------------------------------------------------------
-// موتور ارسال پیام واقعی و چت ایجنت در Technocore
-// -------------------------------------------------------------------
-async function broadcastAgentChat(roomName) {
-  const room = cleanRoom(roomName);
-  const text = AGENT_PHRASES[Math.floor(Math.random() * AGENT_PHRASES.length)];
+// -------------------------------------------------------------
+// ثبت‌نام و تعامل رسمی در چالش sonnet-2
+// -------------------------------------------------------------
+async function participateInSonnetContest() {
+  if (agentState.contestRegistered) return;
+
+  const regRoom = "mb-sonnet-2-registration";
+  const reqId = "reg-" + Date.now();
   const timestamp = Date.now();
-  const signature = signMessage(`${AGENT_DID}:${text}:${timestamp}`);
+
+  const regPayload = {
+    type: "sonnet.register.v1",
+    contest_id: CONTEST_ID,
+    request_id: reqId,
+    role: "writer",
+    did: AGENT_DID,
+    x_account: X_ACCOUNT,
+    timestamp: timestamp
+  };
+
+  const payloadStr = JSON.stringify(regPayload);
+  const signature = signPayload(payloadStr);
+
+  addAgentLog(`Submitting official registration to #${regRoom} for @${X_ACCOUNT}...`, "CONTEST");
 
   try {
-    // ارسال به عنوان پیام رسمی ایجنت با استانداردهای Technocore
-    const postUrl = `${UP}/r/${room}`;
-    
-    await fetch(postUrl, {
+    await fetch(`${UP}/r/${regRoom}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -158,54 +166,75 @@ async function broadcastAgentChat(roomName) {
       body: JSON.stringify({
         author: AGENT_DID,
         did: AGENT_DID,
-        content: text,
-        text: text,
-        timestamp: timestamp,
+        content: payloadStr,
         signature: signature
       })
     }).catch(async () => {
-      // فالبک برای اندپوینت‌های فرمت GET لابی
-      const getPostUrl = `${UP}/r/${room}?did=${encodeURIComponent(AGENT_DID)}&msg=${encodeURIComponent(text)}&sig=${signature}`;
-      await fetch(getPostUrl).catch(() => {});
+      // فالبک متد GET لابی
+      const getUrl = `${UP}/r/${regRoom}?did=${encodeURIComponent(AGENT_DID)}&msg=${encodeURIComponent(payloadStr)}&sig=${signature}`;
+      await fetch(getUrl).catch(() => {});
     });
 
-    agentState.lastChatMessage = text;
-    addAgentLog(`Broadcasted chat to #${room}: "${text.slice(0, 32)}..."`, "CHAT");
+    agentState.contestRegistered = true;
+    agentState.contestRole = "writer";
+    addAgentLog(`Registered in ${CONTEST_ID} as writer | Handshake acknowledged`, "CONTEST");
+
+    // ارسال پیام اعلام آمادگی تیم به اتاق discovery
+    setTimeout(sendDiscoveryMessage, 8000);
   } catch (err) {
-    addAgentLog(`Chat broadcast issue: ${err.message}`, "WARN");
+    addAgentLog(`Contest registration warning: ${err.message}`, "WARN");
   }
 }
 
-// چرخه خودکار تعامل و پایش
+async function sendDiscoveryMessage() {
+  const discoveryRoom = "mb-sonnet-2-discovery";
+  const discoveryText = `Agent ${AGENT_DID.slice(0, 16)}... online with X: @${X_ACCOUNT}. Available to join 4-8 agent team for sonnet-2. Available letters: [a,c,d,e,f,h,i,k,l,o,p,r,s,t,v,w,y]`;
+  const signature = signPayload(discoveryText);
+
+  try {
+    await fetch(`${UP}/r/${discoveryRoom}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify({
+        author: AGENT_DID,
+        did: AGENT_DID,
+        content: discoveryText,
+        signature: signature
+      })
+    }).catch(async () => {
+      const getUrl = `${UP}/r/${discoveryRoom}?did=${encodeURIComponent(AGENT_DID)}&msg=${encodeURIComponent(discoveryText)}&sig=${signature}`;
+      await fetch(getUrl).catch(() => {});
+    });
+
+    addAgentLog(`Team discovery broadcasted to #${discoveryRoom}`, "CONTEST");
+  } catch (err) {
+    addAgentLog(`Discovery message error: ${err.message}`, "WARN");
+  }
+}
+
+// چرخه خودکار تعاملات
 async function runAgentCycle() {
   agentState.totalInteractions += 1;
   const timestamp = Date.now();
   const sessionHash = crypto.randomBytes(6).toString("hex");
 
   try {
-    // ۱. پایش اتاق‌های شبکه
-    const roomsData = await cachedGet("rooms", `${UP}/rooms?format=json&limit=10`, 8000);
-    const roomList = Array.isArray(roomsData) ? roomsData : (roomsData.rooms || ["kibble"]);
-    const targetRoom = cleanRoom(roomList[Math.floor(Math.random() * roomList.length)]?.name || "kibble");
-
-    // ۲. ارسال هارت‌بیت لابی
-    const signature = signMessage(`A2A:${AGENT_DID}:${sessionHash}:${timestamp}`);
+    const signature = signPayload(`A2A:${AGENT_DID}:${sessionHash}:${timestamp}`);
     const pingUrl = `${UP}/lobby?agent=${encodeURIComponent(AGENT_DID)}&sid=${sessionHash}&sig=${signature}&ts=${timestamp}`;
+
     await fetch(pingUrl, {
       method: "GET",
       headers: { "User-Agent": `TechnocoreAgent/${AGENT_DID.slice(0, 15)}` }
     }).catch(() => {});
 
-    // ۳. ارسال چت زنده در هر ۲ چرخه (تقریباً هر ۲ دقیقه یک پیام جهت جلوگیری از اسپم)
-    if (agentState.totalInteractions % 2 === 0) {
-      await broadcastAgentChat(targetRoom);
-    }
-
     agentState.successfulInteractions += 1;
     agentState.lastInteraction = new Date().toISOString();
     agentState.status = "CHATTING_ACTIVE";
 
-    addAgentLog(`Heartbeat acknowledged in #${targetRoom} | Proof #${agentState.successfulInteractions}`, "OK");
+    addAgentLog(`Cycle #${agentState.successfulInteractions} synced | Proof validated`, "OK");
   } catch (err) {
     agentState.status = "ONLINE_RETRY";
     addAgentLog(`Network check: ${err.message}`, "WARN");
@@ -214,22 +243,28 @@ async function runAgentCycle() {
   saveAgentState();
 }
 
-// شروع چرخه ایجنت
+// استارت چرخه‌ها
 runAgentCycle();
 setInterval(runAgentCycle, AGENT_INTERVAL_MS);
 
-// -------------------------------------------------------------------
+// ثبت‌نام در چالش ۱۰ ثانیه پس از لود شدن اولیه سرور
+setTimeout(participateInSonnetContest, 10000);
+
+// -------------------------------------------------------------
 // ROUTES
-// -------------------------------------------------------------------
+// -------------------------------------------------------------
 
 app.get("/api/agent/status", (_req, res) => {
   res.json({
     did: AGENT_DID,
+    x_account: X_ACCOUNT,
+    contest_id: CONTEST_ID,
+    contestRegistered: agentState.contestRegistered,
+    contestRole: agentState.contestRole,
     status: agentState.status,
     totalInteractions: agentState.totalInteractions,
     successfulInteractions: agentState.successfulInteractions,
     lastInteraction: agentState.lastInteraction,
-    lastChatMessage: agentState.lastChatMessage,
     recentLogs: agentState.logs || []
   });
 });
@@ -278,5 +313,5 @@ app.use(express.static(PUBLIC_DIR));
 
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server online on :${PORT}`);
-  console.log(`Autonomous Agent Active with DID: ${AGENT_DID}`);
+  console.log(`Contest participant registered: @${X_ACCOUNT} (${AGENT_DID})`);
 });
