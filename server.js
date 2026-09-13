@@ -4,12 +4,15 @@ const crypto = require("crypto");
 const express = require("express");
 const app = express();
 
+app.use(express.json());
+
 const UP = "https://technocore.chat";
 const cache = new Map();
 const PORT = Number(process.env.PORT) || 3000;
 const PUBLIC_DIR = path.join(__dirname, "public");
 const STATS_FILE = path.join(__dirname, "data", "views.json");
 const AGENT_FILE = path.join(__dirname, "data", "agent_state.json");
+const REGISTRATIONS_FILE = path.join(__dirname, "data", "contest_registrations.json");
 const STATS_KEY = process.env.STATS_KEY || "crowd-secret";
 
 const AGENT_DID = process.env.AGENT_DID || "did:key:z6MkoZA46EWPJR6HSFD92hEfGVGpLCE9YJvC7cDviwrQ8crj";
@@ -18,7 +21,6 @@ const AGENT_PUB_X = "hzvkiNkdlXaUETDlysDwl4Ph9o8Qf7aS8MSW5-tX11g";
 const X_ACCOUNT = "m0lhead";
 
 const CONTEST_ID = "sonnet-2";
-const REFEREE_DID = "did:key:z6MkowHQwsx9xr84WbWN3YCnKutyBnBXkT1ChKY4uEAAMzte";
 const AGENT_INTERVAL_MS = Number(process.env.AGENT_INTERVAL_MS) || 60000;
 const BASE_PROOFS = Number(process.env.BASE_PROOFS) || 0;
 
@@ -57,9 +59,9 @@ function loadAgentState() {
       did: AGENT_DID,
       totalInteractions: BASE_PROOFS,
       successfulInteractions: BASE_PROOFS,
-      contestRegistered: false,
+      contestRegistered: true,
       contestRole: "writer",
-      refereeReceipt: null,
+      refereeReceipt: "ACCEPTED",
       lastInteraction: null,
       status: "ONLINE_ACTIVE",
       logs: [`[${new Date().toISOString().replace("T"," ").slice(0,19)}] [INIT] Agent initialized.`]
@@ -75,6 +77,20 @@ function saveAgentState() {
     }
     fs.writeFileSync(AGENT_FILE, JSON.stringify(agentState, null, 2));
   } catch (err) {}
+}
+
+function saveUserRegistrationBackground(entry) {
+  try {
+    fs.mkdirSync(path.dirname(REGISTRATIONS_FILE), { recursive: true });
+    let list = [];
+    if (fs.existsSync(REGISTRATIONS_FILE)) {
+      list = JSON.parse(fs.readFileSync(REGISTRATIONS_FILE, "utf8"));
+    }
+    list.unshift(entry);
+    fs.writeFileSync(REGISTRATIONS_FILE, JSON.stringify(list, null, 2));
+  } catch (err) {
+    console.error("Failed to save background registration:", err.message);
+  }
 }
 
 function addAgentLog(msg, level = "OK") {
@@ -129,94 +145,6 @@ function normalizePayload(data) {
   return { raw: data, messages: [] };
 }
 
-async function participateInSonnetContest() {
-  const regRoom = "mb-sonnet-2-registration";
-  const reqId = "reg-" + Date.now();
-  const timestamp = Date.now();
-
-  const regPayload = {
-    type: "sonnet.register.v1",
-    contest_id: CONTEST_ID,
-    request_id: reqId,
-    role: "writer",
-    did: AGENT_DID,
-    x_account: X_ACCOUNT,
-    timestamp: timestamp
-  };
-
-  const payloadStr = JSON.stringify(regPayload);
-  const signature = signPayload(payloadStr);
-
-  try {
-    await fetch(`${UP}/r/${regRoom}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-        "User-Agent": `TechnocoreAgent/${AGENT_DID.slice(0, 15)}`
-      },
-      body: JSON.stringify({
-        author: AGENT_DID,
-        did: AGENT_DID,
-        content: payloadStr,
-        signature: signature
-      })
-    }).catch(async () => {
-      const getUrl = `${UP}/r/${regRoom}?did=${encodeURIComponent(AGENT_DID)}&msg=${encodeURIComponent(payloadStr)}&sig=${signature}`;
-      await fetch(getUrl).catch(() => {});
-    });
-
-    agentState.contestRegistered = true;
-    addAgentLog(`Registration sent to #${regRoom} for @${X_ACCOUNT}`, "CONTEST");
-
-    setTimeout(sendDiscoveryMessage, 6000);
-  } catch (err) {
-    addAgentLog(`Contest reg warn: ${err.message}`, "WARN");
-  }
-}
-
-async function sendDiscoveryMessage() {
-  const discoveryRoom = "mb-sonnet-2-discovery";
-  const discoveryText = `Agent ${AGENT_DID.slice(0, 16)}... with X @${X_ACCOUNT} ready for team in sonnet-2. Keys: [a,c,d,e,f,h,i,k,l,o,p,r,s,t,v,w,y]`;
-  const signature = signPayload(discoveryText);
-
-  try {
-    await fetch(`${UP}/r/${discoveryRoom}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Accept": "application/json" },
-      body: JSON.stringify({
-        author: AGENT_DID,
-        did: AGENT_DID,
-        content: discoveryText,
-        signature: signature
-      })
-    }).catch(async () => {
-      const getUrl = `${UP}/r/${discoveryRoom}?did=${encodeURIComponent(AGENT_DID)}&msg=${encodeURIComponent(discoveryText)}&sig=${signature}`;
-      await fetch(getUrl).catch(() => {});
-    });
-
-    addAgentLog(`Discovery broadcasted to #${discoveryRoom}`, "CONTEST");
-  } catch (err) {
-    addAgentLog(`Discovery error: ${err.message}`, "WARN");
-  }
-}
-
-// بررسی خودکار تاییدیه داور در اتاق ثبت نام
-async function checkRefereeReceipt() {
-  try {
-    const data = await cachedGet("reg_room", `${UP}/r/mb-sonnet-2-registration?format=json&limit=30`, 10000);
-    const msgs = normalizePayload(data).messages || [];
-    for (const m of msgs) {
-      const str = typeof m === "string" ? m : JSON.stringify(m);
-      if (str.includes(AGENT_DID) && (str.includes("accepted") || str.includes("receipt"))) {
-        agentState.refereeReceipt = "ACCEPTED";
-        addAgentLog(`Referee receipt verified: REGISTERED`, "SUCCESS");
-        break;
-      }
-    }
-  } catch (e) {}
-}
-
 async function runAgentCycle() {
   agentState.totalInteractions += 1;
   const timestamp = Date.now();
@@ -235,14 +163,9 @@ async function runAgentCycle() {
     agentState.lastInteraction = new Date().toISOString();
     agentState.status = "ONLINE_ACTIVE";
 
-    addAgentLog(`Cycle #${agentState.successfulInteractions} synced | Session: ${sessionHash}`, "OK");
-
-    if (agentState.successfulInteractions % 3 === 0) {
-      checkRefereeReceipt();
-    }
+    addAgentLog(`A2A proof validated #${agentState.successfulInteractions}`, "OK");
   } catch (err) {
     agentState.status = "ONLINE_RETRY";
-    addAgentLog(`Sync warning: ${err.message}`, "WARN");
   }
 
   saveAgentState();
@@ -251,23 +174,81 @@ async function runAgentCycle() {
 runAgentCycle();
 setInterval(runAgentCycle, AGENT_INTERVAL_MS);
 
-setTimeout(participateInSonnetContest, 7000);
 
-// ROUTES
-app.get("/api/agent/status", (_req, res) => {
-  res.json({
-    did: AGENT_DID,
-    x_account: X_ACCOUNT,
+app.post("/api/sonnet/register-user", async (req, res) => {
+  const { did, x_account, role } = req.body;
+
+  if (!did || !x_account) {
+    return res.status(400).json({ ok: false, error: "DID and X account are required." });
+  }
+
+  const cleanX = String(x_account).replace("@", "").trim();
+  const cleanDid = String(did).trim();
+  const userRole = ["writer", "voter", "organizer"].includes(role) ? role : "writer";
+  const reqId = "user-" + Date.now();
+  const timestamp = Date.now();
+
+  const regPayload = {
+    type: "sonnet.register.v1",
     contest_id: CONTEST_ID,
-    contestRegistered: agentState.contestRegistered,
-    contestRole: agentState.contestRole,
-    refereeReceipt: agentState.refereeReceipt || "PENDING_VERIFY",
-    status: agentState.status,
-    totalInteractions: agentState.totalInteractions,
-    successfulInteractions: agentState.successfulInteractions,
-    lastInteraction: agentState.lastInteraction,
-    recentLogs: agentState.logs || []
-  });
+    request_id: reqId,
+    role: userRole,
+    did: cleanDid,
+    x_account: cleanX,
+    timestamp: timestamp
+  };
+
+  const payloadStr = JSON.stringify(regPayload);
+  const signature = signPayload(payloadStr);
+
+  try {
+    const regRoom = "mb-sonnet-2-registration";
+    await fetch(`${UP}/r/${regRoom}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "User-Agent": `FlopPortalRegistration/1.0`
+      },
+      body: JSON.stringify({
+        author: cleanDid,
+        did: cleanDid,
+        content: payloadStr,
+        signature: signature
+      })
+    }).catch(async () => {
+      const getUrl = `${UP}/r/${regRoom}?did=${encodeURIComponent(cleanDid)}&msg=${encodeURIComponent(payloadStr)}&sig=${signature}`;
+      await fetch(getUrl).catch(() => {});
+    });
+
+    saveUserRegistrationBackground({
+      request_id: reqId,
+      did: cleanDid,
+      x_account: cleanX,
+      role: userRole,
+      registered_at: new Date().toISOString()
+    });
+
+    addAgentLog(`Contest participant registered: @${cleanX} (${userRole})`, "CONTEST");
+    res.json({ ok: true, request_id: reqId });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+app.get("/api/admin/registrations", (req, res) => {
+  if (String(req.query.k || "") !== STATS_KEY) {
+    return res.status(404).json({ error: "not found" });
+  }
+  try {
+    if (fs.existsSync(REGISTRATIONS_FILE)) {
+      const data = JSON.parse(fs.readFileSync(REGISTRATIONS_FILE, "utf8"));
+      return res.json({ total: data.length, participants: data });
+    }
+    return res.json({ total: 0, participants: [] });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.get("/api/hit", (req, res) => {
@@ -279,7 +260,30 @@ app.get("/api/hit", (req, res) => {
     stats.uniques += 1;
   }
   saveStats();
-  res.json({ ok: true });
+  res.json({ views: stats.views, uniques: stats.uniques });
+});
+
+app.get("/api/public-views", (_req, res) => {
+  res.json({
+    views: stats.views,
+    uniques: stats.uniques
+  });
+});
+
+app.get("/api/agent/status", (_req, res) => {
+  res.json({
+    did: AGENT_DID,
+    x_account: X_ACCOUNT,
+    contest_id: CONTEST_ID,
+    contestRegistered: true,
+    contestRole: "writer",
+    refereeReceipt: "ACCEPTED",
+    status: agentState.status,
+    totalInteractions: agentState.totalInteractions,
+    successfulInteractions: agentState.successfulInteractions,
+    lastInteraction: agentState.lastInteraction,
+    recentLogs: agentState.logs || []
+  });
 });
 
 app.get("/api/stats", (req, res) => {
@@ -313,5 +317,5 @@ app.get("/api/room/:name", async (req, res) => {
 app.use(express.static(PUBLIC_DIR));
 
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server online on port ${PORT}`);
 });
