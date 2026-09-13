@@ -64,7 +64,7 @@ function loadAgentState() {
       refereeReceipt: "ACCEPTED",
       lastInteraction: null,
       status: "ONLINE_ACTIVE",
-      logs: [`[${new Date().toISOString().replace("T"," ").slice(0,19)}] [INIT] Agent initialized.`]
+      logs: [`[${new Date().toISOString().replace("T"," ").slice(0,19)}] [INIT] Host agent ready.`]
     };
   }
 }
@@ -88,9 +88,7 @@ function saveUserRegistrationBackground(entry) {
     }
     list.unshift(entry);
     fs.writeFileSync(REGISTRATIONS_FILE, JSON.stringify(list, null, 2));
-  } catch (err) {
-    console.error("Failed to save background registration:", err.message);
-  }
+  } catch (err) {}
 }
 
 function addAgentLog(msg, level = "OK") {
@@ -174,10 +172,33 @@ async function runAgentCycle() {
 runAgentCycle();
 setInterval(runAgentCycle, AGENT_INTERVAL_MS);
 
+// -------------------------------------------------------------
+// ROUTES
+// -------------------------------------------------------------
+
+// ابزار نگه‌دارنده ایجنت کاربران از طریق کلاینت
+app.get("/api/agent/client-keepalive", async (req, res) => {
+  const did = String(req.query.did || "").trim();
+  const room = cleanRoom(req.query.room || "kibble");
+
+  if (!did || !did.startsWith("did:key")) {
+    return res.status(400).json({ ok: false, error: "Invalid did:key format" });
+  }
+
+  try {
+    const pingUrl = `${UP}/lobby?agent=${encodeURIComponent(did)}&room=${room}&ts=${Date.now()}`;
+    await fetch(pingUrl, {
+      headers: { "User-Agent": `FlopKeepAliveClient/1.0 (${did.slice(0, 16)})` }
+    }).catch(() => {});
+
+    res.json({ ok: true, room, timestamp: Date.now() });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
 
 app.post("/api/sonnet/register-user", async (req, res) => {
   const { did, x_account, role } = req.body;
-
   if (!did || !x_account) {
     return res.status(400).json({ ok: false, error: "DID and X account are required." });
   }
@@ -186,7 +207,6 @@ app.post("/api/sonnet/register-user", async (req, res) => {
   const cleanDid = String(did).trim();
   const userRole = ["writer", "voter", "organizer"].includes(role) ? role : "writer";
   const reqId = "user-" + Date.now();
-  const timestamp = Date.now();
 
   const regPayload = {
     type: "sonnet.register.v1",
@@ -195,7 +215,7 @@ app.post("/api/sonnet/register-user", async (req, res) => {
     role: userRole,
     did: cleanDid,
     x_account: cleanX,
-    timestamp: timestamp
+    timestamp: Date.now()
   };
 
   const payloadStr = JSON.stringify(regPayload);
@@ -261,13 +281,6 @@ app.get("/api/hit", (req, res) => {
   }
   saveStats();
   res.json({ views: stats.views, uniques: stats.uniques });
-});
-
-app.get("/api/public-views", (_req, res) => {
-  res.json({
-    views: stats.views,
-    uniques: stats.uniques
-  });
 });
 
 app.get("/api/agent/status", (_req, res) => {

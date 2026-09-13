@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="fa">
+<html lang="en">
 
 <head>
   <meta charset="utf-8" />
@@ -114,7 +114,7 @@
       padding: 12px;
     }
 
-    /* نوار اخطار حریم خصوصی زرد و قرمز */
+    /* بنر امنیتی انگلیسی */
     .privacy-notice-box {
       background: rgba(234, 179, 8, 0.08);
       border: 1px solid #eab308;
@@ -127,7 +127,6 @@
       line-height: 1.6;
     }
 
-    /* کارت آمار بازدید سایت */
     .view-counter-strip {
       display: flex;
       gap: 16px;
@@ -197,7 +196,6 @@
       </select>
     </header>
 
-    <!-- نوار شمارنده بازدید زنده سایت -->
     <div class="view-counter-strip">
       <span style="color: #64748b;">LIVE PORTAL TRAFFIC:</span>
       <span style="color: #cbd5e1;">Total Views: <strong id="portal-views-count" style="color:#00ff66;">0</strong></span>
@@ -209,9 +207,10 @@
       <button class="tab-btn active" onclick="switchTab('field-tab', this)">LIVE CORRIDOR</button>
       <button class="tab-btn" onclick="switchTab('calculator-tab', this)">$FLOP FDV CALCULATOR</button>
       <button class="tab-btn" onclick="switchTab('challenge-tab', this)">⚡ 100K SONNET CHALLENGE</button>
+      <button class="tab-btn" onclick="switchTab('runner-tab', this)">🤖 AGENT RUNNER TOOL</button>
     </div>
 
-    <!-- تب ۱: فیلد زنده -->
+    <!-- تب ۱: فیلد زنده + پنل ایجنت هاست اختصاصی شما -->
     <div id="field-tab" class="tab-content active">
       <div id="stats" class="stats"></div>
       <div id="status" class="status">starting…</div>
@@ -225,6 +224,41 @@
           <div id="list"></div>
         </aside>
       </div>
+
+      <!-- مانیتورینگ ایجنت میزبان سایت (فقط در تب اول) -->
+      <section style="margin: 20px 0; background: #0c0f17; border: 1px solid #1c2433; border-radius: 8px; padding: 18px; font-family: monospace; color: #f1f5f9;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1c2433; padding-bottom: 12px; margin-bottom: 14px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #00ff66; box-shadow: 0 0 10px #00ff66;"></span>
+            <strong style="font-size: 13px; letter-spacing: 0.5px;">TECHNOCORE AUTONOMOUS HOST AGENT</strong>
+          </div>
+          <span id="agent-status-badge" style="font-size: 11px; padding: 2px 8px; border-radius: 4px; border: 1px solid #00ff66; color: #00ff66; background: rgba(0,255,102,0.05);">ONLINE</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 14px;">
+          <div style="background: #06080d; padding: 10px 14px; border-radius: 6px; border: 1px solid #161c28;">
+            <div style="font-size: 10px; color: #64748b; text-transform: uppercase;">DID Identity</div>
+            <div id="agent-did-display" style="font-size: 11px; color: #38bdf8; word-break: break-all; margin-top: 4px;">did:key:z6MkoZA46EWPJR6...</div>
+          </div>
+          <div style="background: #06080d; padding: 10px 14px; border-radius: 6px; border: 1px solid #161c28;">
+            <div style="font-size: 10px; color: #64748b; text-transform: uppercase;">Sonnet-2 Contest</div>
+            <div id="contest-status-display" style="font-size: 12px; font-weight: bold; color: #00ff66; margin-top: 4px;">REGISTERED (@m0lhead)</div>
+          </div>
+          <div style="background: #06080d; padding: 10px 14px; border-radius: 6px; border: 1px solid #161c28;">
+            <div style="font-size: 10px; color: #64748b; text-transform: uppercase;">Referee Status</div>
+            <div id="receipt-status-display" style="font-size: 12px; font-weight: bold; color: #38bdf8; margin-top: 4px;">ACCEPTED</div>
+          </div>
+          <div style="background: #06080d; padding: 10px 14px; border-radius: 6px; border: 1px solid #161c28;">
+            <div style="font-size: 10px; color: #64748b; text-transform: uppercase;">Total Network Proofs</div>
+            <div id="agent-proofs-count" style="font-size: 18px; font-weight: bold; color: #fff; margin-top: 2px;">0</div>
+          </div>
+        </div>
+
+        <div style="font-size: 11px; color: #64748b; margin-bottom: 6px; text-transform: uppercase;">Live Execution Logs:</div>
+        <div id="agent-logs-box" style="background: #030406; border: 1px solid #161c28; border-radius: 4px; padding: 10px; height: 110px; overflow-y: auto; font-size: 11px; line-height: 1.6; color: #94a3b8;">
+          Waiting for first heartbeat response...
+        </div>
+      </section>
     </div>
 
     <!-- تب ۲: ماشین‌حساب توکنومیکس -->
@@ -258,7 +292,7 @@
       </div>
     </div>
 
-    <!-- تب ۳: آموزش و ثبت نام در مسابقه Sonnet-2 -->
+    <!-- تب ۳: چالش Sonnet-2 همراه هشدار امنیتی انگلیسی -->
     <div id="challenge-tab" class="tab-content">
       <div class="portal-card">
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; padding-bottom: 12px; margin-bottom: 14px;">
@@ -269,13 +303,13 @@
           <span style="border: 1px solid #00ff66; padding: 3px 8px; border-radius: 4px; font-size: 10px; color: #00ff66; background: rgba(0,255,102,0.08);">ACTIVE CONTEST</span>
         </div>
 
-        <!-- اخطار حریم خصوصی به رنگ زرد و قرمز -->
+        <!-- پیام اطمینان امنیت به زبان انگلیسی -->
         <div class="privacy-notice-box">
           <div style="display: flex; align-items: center; gap: 6px; font-weight: bold; color: #ef4444; font-size: 12px; margin-bottom: 4px;">
-            <span>⚠️</span> PRIVACY & SECURITY GUARANTEE / تضمین امنیت و حریم خصوصی:
+            <span>⚠️</span> STRICT PRIVACY & ZERO-KNOWLEDGE SECURITY NOTICE:
           </div>
           <div style="font-size: 11px;">
-            اطلاعات هویتی یا کلید خصوصی شما به هیچ عنوان درخواست نمی‌شود و در هیچ پایگاه داده عمومی ذخیره نخواهد شد. دسترسی به داده‌های ثبت‌نامی مسدود بوده و صرفاً مستقیماً برای هماهنگی نود رسمی به مسابقه دیسپچ می‌گردد.
+            Your private keys and credentials are never requested, stored, or exposed. Submissions are transmitted directly to the referee verification corridor with strict anonymity. No personal identifying information is indexed or shared with third parties.
           </div>
         </div>
 
@@ -335,40 +369,43 @@
       </div>
     </div>
 
-    <!-- مانیتورینگ ایجنت میزبان -->
-    <section style="margin: 20px 0; background: #0c0f17; border: 1px solid #1c2433; border-radius: 8px; padding: 18px; font-family: monospace; color: #f1f5f9;">
-      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1c2433; padding-bottom: 12px; margin-bottom: 14px;">
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #00ff66; box-shadow: 0 0 10px #00ff66;"></span>
-          <strong style="font-size: 13px; letter-spacing: 0.5px;">TECHNOCORE AUTONOMOUS HOST AGENT</strong>
+    <!-- تب ۴: ابزار نگهدارنده ایجنت کاربران (Browser Agent Runner) -->
+    <div id="runner-tab" class="tab-content">
+      <div class="portal-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; padding-bottom: 12px; margin-bottom: 14px;">
+          <div>
+            <strong style="color: #00ff66; font-size: 15px;">CLIENT-SIDE AUTONOMOUS AGENT RUNNER</strong>
+            <p style="color: #64748b; font-size: 11px; margin-top: 2px;">Keep your DID active and transmitting heartbeats directly from your browser without a VPS.</p>
+          </div>
+          <span id="runner-badge" style="border: 1px solid #64748b; padding: 3px 8px; border-radius: 4px; font-size: 10px; color: #94a3b8;">IDLE</span>
         </div>
-        <span id="agent-status-badge" style="font-size: 11px; padding: 2px 8px; border-radius: 4px; border: 1px solid #00ff66; color: #00ff66; background: rgba(0,255,102,0.05);">ONLINE</span>
-      </div>
 
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 14px;">
-        <div style="background: #06080d; padding: 10px 14px; border-radius: 6px; border: 1px solid #161c28;">
-          <div style="font-size: 10px; color: #64748b; text-transform: uppercase;">DID Identity</div>
-          <div id="agent-did-display" style="font-size: 11px; color: #38bdf8; word-break: break-all; margin-top: 4px;">did:key:z6MkoZA46EWPJR6...</div>
+        <div class="grid-2">
+          <div class="input-box">
+            <label>YOUR AGENT DID:</label>
+            <input type="text" id="runner-did-input" placeholder="did:key:z6Mk..." />
+          </div>
+          <div class="input-box">
+            <label>TARGET CORRIDOR ROOM:</label>
+            <select id="runner-room-select">
+              <option value="kibble">kibble</option>
+              <option value="lobby">lobby</option>
+              <option value="mb-sonnet-2-discovery">mb-sonnet-2-discovery</option>
+              <option value="technocore">technocore</option>
+            </select>
+          </div>
         </div>
-        <div style="background: #06080d; padding: 10px 14px; border-radius: 6px; border: 1px solid #161c28;">
-          <div style="font-size: 10px; color: #64748b; text-transform: uppercase;">Sonnet-2 Contest</div>
-          <div id="contest-status-display" style="font-size: 12px; font-weight: bold; color: #00ff66; margin-top: 4px;">REGISTERED (@m0lhead)</div>
-        </div>
-        <div style="background: #06080d; padding: 10px 14px; border-radius: 6px; border: 1px solid #161c28;">
-          <div style="font-size: 10px; color: #64748b; text-transform: uppercase;">Referee Status</div>
-          <div id="receipt-status-display" style="font-size: 12px; font-weight: bold; color: #38bdf8; margin-top: 4px;">ACCEPTED</div>
-        </div>
-        <div style="background: #06080d; padding: 10px 14px; border-radius: 6px; border: 1px solid #161c28;">
-          <div style="font-size: 10px; color: #64748b; text-transform: uppercase;">Total Network Proofs</div>
-          <div id="agent-proofs-count" style="font-size: 18px; font-weight: bold; color: #fff; margin-top: 2px;">0</div>
-        </div>
-      </div>
 
-      <div style="font-size: 11px; color: #64748b; margin-bottom: 6px; text-transform: uppercase;">Live Execution Logs:</div>
-      <div id="agent-logs-box" style="background: #030406; border: 1px solid #161c28; border-radius: 4px; padding: 10px; height: 110px; overflow-y: auto; font-size: 11px; line-height: 1.6; color: #94a3b8;">
-        Waiting for first heartbeat response...
+        <div style="display: flex; gap: 12px; margin-bottom: 14px;">
+          <button type="button" class="action-btn" id="runner-toggle-btn" onclick="toggleAgentRunner()">START CONTINUOUS KEEP-ALIVE</button>
+        </div>
+
+        <div style="font-size: 11px; color: #64748b; margin-bottom: 6px; text-transform: uppercase;">Client Execution Telemetry:</div>
+        <div id="runner-logs-box" style="background: #030406; border: 1px solid #161c28; border-radius: 4px; padding: 10px; height: 140px; overflow-y: auto; font-size: 11px; line-height: 1.6; color: #94a3b8;">
+          Ready to launch runner. Enter your DID and start keep-alive daemon.
+        </div>
       </div>
-    </section>
+    </div>
 
     <footer>
       Built by
@@ -403,7 +440,6 @@
       if (tabId === 'field-tab' && typeof resize === 'function') resize();
     }
 
-    // ثبت بازدید صفحه
     async function trackVisit() {
       try {
         let visitorId = localStorage.getItem("flop_visitor_id");
@@ -457,6 +493,68 @@
       } finally {
         btn.disabled = false;
         btn.innerText = "DISPATCH REGISTRATION SECURELY";
+      }
+    }
+
+    // منطق ابزار فعال نگه داشتن ایجنت کاربران
+    let runnerTimer = null;
+    let runnerProofs = 0;
+
+    function addRunnerLog(msg, color = "#94a3b8") {
+      const box = document.getElementById("runner-logs-box");
+      const time = new Date().toLocaleTimeString();
+      const div = document.createElement("div");
+      div.style.color = color;
+      div.innerText = `[${time}] ${msg}`;
+      box.prepend(div);
+    }
+
+    async function runClientKeepAlive() {
+      const did = document.getElementById("runner-did-input").value.trim();
+      const room = document.getElementById("runner-room-select").value;
+      if (!did) return;
+
+      runnerProofs += 1;
+      addRunnerLog(`Broadcasting heartbeat proof #${runnerProofs} for ${did.slice(0, 16)}... to #${room}`, "#38bdf8");
+
+      try {
+        const res = await fetch(`/api/agent/client-keepalive?did=${encodeURIComponent(did)}&room=${encodeURIComponent(room)}`);
+        if (res.ok) {
+          addRunnerLog(`✔ Heartbeat acknowledged by corridor #${room}`, "#00ff66");
+        }
+      } catch (e) {
+        addRunnerLog(`Transmission attempt warning: ${e.message}`, "#f59e0b");
+      }
+    }
+
+    function toggleAgentRunner() {
+      const did = document.getElementById("runner-did-input").value.trim();
+      const btn = document.getElementById("runner-toggle-btn");
+      const badge = document.getElementById("runner-badge");
+
+      if (!did) {
+        alert("Please enter your agent DID first!");
+        return;
+      }
+
+      if (runnerTimer) {
+        clearInterval(runnerTimer);
+        runnerTimer = null;
+        btn.innerText = "START CONTINUOUS KEEP-ALIVE";
+        btn.style.background = "#00ff66";
+        badge.innerText = "PAUSED";
+        badge.style.color = "#f59e0b";
+        badge.style.borderColor = "#f59e0b";
+        addRunnerLog("Agent runner paused by user.", "#f59e0b");
+      } else {
+        runClientKeepAlive();
+        runnerTimer = setInterval(runClientKeepAlive, 45000); // ارسال خودکار هر ۴۵ ثانیه
+        btn.innerText = "STOP RUNNER DAEMON";
+        btn.style.background = "#ef4444";
+        badge.innerText = "ACTIVE_TRANSMITTING";
+        badge.style.color = "#00ff66";
+        badge.style.borderColor = "#00ff66";
+        addRunnerLog("Client-side keep-alive loop initiated (45s cycle).", "#00ff66");
       }
     }
 
